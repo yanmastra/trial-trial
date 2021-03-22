@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<output>
+    <ticket>
+        <line>
+            <image>Printer.Ticket.LogoBill</image>
+        </line>
+        <line></line> 
+        <line size="1">
+            <text align ="center" length="42" bold="true">Close Cash Report</text>
+        </line>
+        <line>
+            <text length="3"></text>
+            <text bold="true">Payments Report</text>
+        </line>
+        <line>
+            <text length="3"></text>
+            <text>------------------------------------</text>
+        </line> 
+        #foreach ($line in $payments.getPaymentLines())
+        <line>
+            <text align ="left" length="3"></text>
+            <text align ="left" length="18">${line.printType()}</text>
+            <text align ="right" length="18">${line.printValue()}</text>
+        </line> 
+        #end
+        <line>
+            <text length="3"></text>
+            <text>------------------------------------</text>
+        </line> 
+        <line></line>
+        <line size="1">
+            <text align ="left" length="3" ></text>
+            <text align ="left" length="10" bold="true">Total</text>
+            <text align ="right" length="26" bold="true">${payments.printPaymentsTotal()}</text>
+        </line>
+        <line></line>
+        <line>
+            <text length="3"></text>
+            <text bold="true">Product Category Sales</text>
+        </line>
+        <line>
+            <text length="3"></text>
+            <text>------------------------------------</text>
+        </line> 
+        <line>
+            <text align ="left" length="3" bold="true"></text>
+            <text align ="left" length="18" bold="true">Name</text>
+            <text align ="left" length="6" bold="true">Qty</text>
+            <text align ="right" length="12" bold="true">Total</text>
+        </line>
+        <line>
+            <text length="3"></text>
+            <text>------------------------------------</text>
+        </line>
+        #foreach ($line in $payments.getCategorySalesLines())
+        <line>
+            <text align ="left" length="3"></text>
+            <text align ="left" length="18">${line.printCategoryName()}</text>
+            <text align ="left" length="6">${line.printCategoryUnits()}</text>
+            <text align ="right" length="12">${line.printCategorySum()}</text>
+        </line>
+        #end
+        <line>
+            <text length="3"></text>
+            <text>------------------------------------</text>
+        </line>
+        <line></line>
+        <line size="1">
+            <text align ="left" length="3"></text>
+            <text align ="left" length="18" bold="true">Subtotal</text>
+            <text align ="right" length="18" bold="true">${payments.printSalesBase()}</text>
+        </line>
+        <line size="1">
+            <text align ="left" length="3"></text>
+            <text align ="left" length="18" bold="true">Taxes</text>
+            <text align ="right" length="18" bold="true">${payments.printSalesTaxes()}</text>
+        </line>
+        <line size="1">
+            <text align ="left" length="3"></text>
+            <text align ="left" length="18" bold="true">Service</text>
+            <text align ="right" length="18" bold="true">${payments.printSalesServices()}</text>
+        </line>
+        <line size="1">
+            <text align ="left" length="3"></text>
+            <text align ="left" length="18" bold="true">Total</text>
+            <text align ="right" length="18" bold="true">${payments.printSalesTotal()}</text>
+        </line>        
+        <line></line>
+        <line>
+            <text length="3"></text>
+            <text length="12">Machine</text>
+            <text>: ${payments.printHost()}</text>
+        </line>    
+        <line>
+            <text length="3"></text>
+            <text length="12">Sequence</text>
+            <text>: ${payments.printSequence()}</text>
+        </line> 
+        <line>
+            <text length="3"></text>
+            <text length="12">Start Date</text>
+            <text>: ${payments.printDateStart()}</text>
+        </line>  
+        <line>
+            <text length="3"></text>
+            <text length="12">End Date</text>
+            <text>: ${payments.printDateEnd()}</text>
+        </line>  
+    </ticket>
+</output>
