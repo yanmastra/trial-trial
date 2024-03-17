@@ -24,7 +24,7 @@
                                     <div class="col-lg-12">
                                             <label for='product_search'>Search product here</label>
                                         <div class="input-group">
-                                            <input id='product_search' onkeyup="onTypingSearch()" value="{{ $search }}" name='search' type="text" class="form-control lg" />
+                                            <input id='product_search' onkeyup="onTypingSearch()" value="{{ $search }}" name='_search' type="text" class="form-control form-control-lg" autocomplete="off"/>
                                             <div class="input-group-append">
                                                 <button id="btn-search" type="submit" class="btn btn-info"> SEARCH </button>
                                             </div>

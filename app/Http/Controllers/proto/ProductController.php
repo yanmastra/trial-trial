@@ -57,25 +57,27 @@ class ProductController extends Controller
 
         $page = $req->input('page'); 
         $size = $req->input('size');
-        $search = $req->input('search');
+        $search = $req->input('_search');
 
         if ($page == null) {
             $page = 1;
         }
 
         if ($size == null) {
-            $size = 20;
+            $size = 10;
         }
 
         $skip = ($page -1) * $size;
 
         if ($search != null && $search != '') {
     	    $data['product'] = $this->product->where('name', 'like', '%'.$search.'%')
+                ->orWhere('code', 'like', '%'.$search.'%')
                 ->orWhereHas('category', function ($query) use ($search) {
                     $query->where('name', 'like', '%'.$search.'%');
                 })->orderBy('updated_at', 'DESC')->skip($skip)->take($size)->get();
 
             $data['total_product'] = Product::instance()->where('name', 'like', '%'.$search.'%')
+                ->orWhere('code', 'like', '%'.$search.'%')
                 ->orWhereHas('category', function ($query) use ($search) {
                     $query->where('name', 'like', '%'.$search.'%');
                 })->get()->count();

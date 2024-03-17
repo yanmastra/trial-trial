@@ -26,7 +26,7 @@
                                 @if(isset($list) && count($list) > 0)
                                     @foreach($list as $i => $item)
                                         <tr>
-                                            <td>{{$item->product()->first()->name}}</td>
+                                            <td>{{ @$item->product()->first()->name}}</td>
                                             <td align="left">{{$item->input_date}}</td>
                                             <td align="left">{{$item->type}}</td>
                                             <td align="right">{{ number_format($item->new_stock, 2, ',', '.') }}</td>

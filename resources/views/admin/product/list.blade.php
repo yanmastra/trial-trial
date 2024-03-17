@@ -102,7 +102,7 @@
                             </div><div class="col-lg-6">
                                 <form action="" method="GET">
                                 <div class="input-group">
-                                    <input type="text" name="search" value="{{ $search }}" class="form-control" />
+                                    <input id="product_search" type="text" name="_search" value="{{ $search }}" class="form-control" />
                                     <div class="input-group-append">
                                         <button class="btn btn-primary" type="submit">SEARCH</button>
                                     </div>
@@ -120,7 +120,7 @@
                                 <th align="right">Stock</th>
                                 <th align="right">Cost Price</th>
                                 <th align="right">Sell Price</th>
-                                <td style="width: 60px"></td>
+                                <td style="width: 300px"></td>
                                 </thead>
                                 <tbody>
                                 @foreach(@$product as $i => $item)
@@ -160,8 +160,13 @@
                                     <a href="{{ url('product?search='.$search.'&page='.$prev_page) }}" class="input-group-prepend">
                                         <button type="button" class="btn btn-info" style="width: 140px"> Previous </button>
                                     </a>
+                                    @if ($page > 2) 
+                                        <a href="{{ url('product?search='.$search.'&page=1') }}" class="input-group-prepend">
+                                            <button type="button" class="btn btn-default" style="width: 140px"> Back to Page 1 </button>
+                                        </a>
+                                    @endif
                                     <div class="input-group-append">
-                                        <span class="form-control" style="width: 100px; text-align: center;"> {{ $page }} </span>
+                                        <span class="form-control" style="width: 300px; text-align: center;">Page {{ $page }} </span>
                                     </div>
                                     <a href="{{ url('product?search='.$search.'&page='.$next_page) }}" class="input-group-append">
                                             <button type="button" class="btn btn-info" style="width: 140px"> Next </button>
@@ -193,6 +198,8 @@
                             "info": false,
                             "autoWidth": true,
                         });
+
+                        @if(isset($search) && $search != '') $('#product_search').focus(); @endif
                     })
                 }
             )

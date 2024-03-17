@@ -51,7 +51,7 @@ class TransactionController extends Controller
         $this->__construct();
         $company = auth()->user()->company()->first();
 
-        $search = $req->input('search');
+        $search = $req->input('_search');
         $data['search'] = $search;
 
         $data['company_name'] = $company->name;

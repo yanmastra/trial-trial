@@ -114,12 +114,12 @@
                                     <p>Users</p>
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            <!-- <li class="nav-item">
                                 <a href="{{ url('loss_profit') }}" class="nav-link">
                                     <i class="nav-icon fas fa-list-alt"></i>
                                     <p>Profit and loss</p>
                                 </a>
-                            </li>
+                            </li> -->
                         @endif
                         <li class="nav-item">
                             <a href="{{ url('logout') }}" class="nav-link">
