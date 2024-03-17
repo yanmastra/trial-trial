@@ -10,7 +10,7 @@
     <section class="content">
         <div class="container-fluid">
             <div class="row">
-                <div class="col-md-7">
+                <div class="col-md-6">
                     <div class="row">
                         <div class="col-md-12">
                     <div class="card card-default">
@@ -18,29 +18,54 @@
                             <h4 class="card-title">New Sales</h4>
                         </div>
                         <div class="card-body">
+                            <form action="{{url('transaction/form/'.@$id)}}" method="get">
+                                <!-- @csrf -->
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                            <label for='product_search'>Search product here</label>
+                                        <div class="input-group">
+                                            <input id='product_search' onkeyup="onTypingSearch()" value="{{ $search }}" name='search' type="text" class="form-control lg" />
+                                            <div class="input-group-append">
+                                                <button id="btn-search" type="submit" class="btn btn-info"> SEARCH </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
                             <form action="{{url('transaction/save/'.@$id)}}" method="post" >
                                 @csrf
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-12">
                                         <div class="form-group">
                                             <label for="product_select">Product</label>
                                             <select id="product_select" onfocus="$(this).click()" name="product" class="form-control select2bs4" style="width: 100%;" onchange="applyPrice()" autofocus>
-                                                <option data-price="0" value="">Select Product</option>
+                                                {{$price = ''}}
                                                 @if(isset($product) && count($product) > 0)
+                                                    {{ $selected = ''}}
+                                                    {{ $price = '' }}
+                                                    @if(count($product) == 1)
+                                                        {{ $selected = 'selected' }}
+                                                        {{ $price = $product[0]->price * 100 / 100 }}
+                                                    @elseif(count($product) > 1)
+                                                        <option data-price="0" value="">Select Product</option>
+                                                    @endif
+
                                                     @foreach($product as $item)
-                                                        <option data-price="{{$item->price}}" value="{{$item->id}}" id="product_{{$item->id}}">{{$item->code." | ".$item->name." | ".number_format($item->price, 2, ',', '.')}}</option>
+                                                        <option data-price="{{$item->price}}" value="{{$item->id}}" id="product_{{$item->id}}" {{$selected}}>{{$item->code." | ".$item->name." | ".number_format($item->price, 2, ',', '.')}}</option>
                                                     @endforeach
                                                 @endif
                                             </select>
                                         </div>
                                         <div class="form-group">
                                             <label>Price</label>
-                                            <input type="number" id="product_price" name="price" class="form-control" placeholder="Product Price" 
+                                            <input type="number" id="product_price" name="price" value="{{ $price }}" class="form-control" placeholder="Product Price" 
                                             {{(\Session::has('config') && @(\Session::get('config')['change_price_while_tx']) == 1)?'':'readonly' }} 
                                             required/>
                                         </div>
                                     </div>
-                                    <div class="col-md-2">
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
                                         <div class="form-group">
                                             <label>QTY</label>
                                             <input id="qty" type="number" value="1" min="0.00" onkeyup="applyQty()" class="form-control" name="qty" placeholder="Quantity" required>
@@ -50,7 +75,7 @@
                                             <input id="discount_val" type="number" min="0.0" class="form-control" placeholder="Discount value" readonly disabled>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Discount</label>
                                             <div class="input-group">
@@ -69,8 +94,8 @@
                                     </div>
                                     <div class="col-md-2">
                                         <div class="form-group">
-                                            <br><br><br>
-                                            <button type="submit" class="btn btn-default btn-focused btn-lg">SAVE</button>
+                                            <br>
+                                            <button type="submit" class="btn btn-primary btn-focused btn-lg">SAVE</button>
                                         </div>
                                     </div>
                                 </div>
@@ -151,7 +176,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-6">
                     <div style="display: block; padding: 12px; border: solid 1px #dfdfdf; background-color: #fff">
                         <table border="0">
                             <tr>
@@ -209,10 +234,10 @@
                                                 <i class="fas fa-minus"></i>
                                             </a>
                                         </td>
-                                        <td align="right" style="width: 60px">{{$item->qty}}</td>
+                                        <td align="center" style="width: 60px">{{$item->qty}}</td>
                                         <td style="width: 20px">
                                             <a href="{{url('transaction/plus/'.$item->transaction_id.'/'.$item->id)}}" class="btn btn-default btn-sm">
-                                                <i class="fas fa-plus"></i>0
+                                                <i class="fas fa-plus"></i>
                                             </a>
                                         </td>
                                         <td align="right">{{number_format($item->price, 2, ',', '.')}}</td>
@@ -241,6 +266,7 @@
     </section>
 
     <script type="text/javascript">
+
         function applyPayment() {
 
             var total = $('#tx_total_val').val();
@@ -279,6 +305,16 @@
             $('#product_price').val((i*100)/100);
         }
 
+        function onTypingSearch() {
+            var val = $('#product_search').val();
+            console.log(val);
+            if (val.length > 0) {
+                $('#btn-search').text("SEARCH");
+            } else {
+                $('#btn-search').text("REFRESH");
+            }
+        }
+
         $(function () {
                 //Initialize Select2 Elements
                 $('.select2').select2()
@@ -287,9 +323,16 @@
                 $('.select2bs4').select2({
                     theme: 'bootstrap4'
                 })
-                $('#product_select').focus();
-            }
-        )
+
+                @if(isset($product) && count($product) > 1) 
+                    $('#product_select').attr('aria-expanded', true);
+                    $('.select2').show();
+                @elseif(isset($product) && count($product) == 1) 
+                    $('#qty').focus();
+                @else
+                    $('#product_search').focus();
+                @endif
+        })
     </script>
 @endsection
 @section('title', 'Form Transaction')

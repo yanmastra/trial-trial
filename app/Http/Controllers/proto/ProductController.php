@@ -54,8 +54,47 @@ class ProductController extends Controller
 
     function index(Request $req, $id = null){
         $this->__construct();
-    	$data['product'] = $this->product->get();
-    	$data['category'] = Category::instance()->get();
+
+        $page = $req->input('page'); 
+        $size = $req->input('size');
+        $search = $req->input('search');
+
+        if ($page == null) {
+            $page = 1;
+        }
+
+        if ($size == null) {
+            $size = 20;
+        }
+
+        $skip = ($page -1) * $size;
+
+        if ($search != null && $search != '') {
+    	    $data['product'] = $this->product->where('name', 'like', '%'.$search.'%')
+                ->orWhereHas('category', function ($query) use ($search) {
+                    $query->where('name', 'like', '%'.$search.'%');
+                })->orderBy('updated_at', 'DESC')->skip($skip)->take($size)->get();
+
+            $data['total_product'] = Product::instance()->where('name', 'like', '%'.$search.'%')
+                ->orWhereHas('category', function ($query) use ($search) {
+                    $query->where('name', 'like', '%'.$search.'%');
+                })->get()->count();
+
+        } else {
+            $baseQuery = $this->product->orderBy('updated_at', 'DESC');
+            $data['product'] = $baseQuery->skip($skip)->take($size)->get();
+            $data['total_product'] = Product::count();
+        }
+
+        $data['start'] = $skip + 1;
+        $data['end'] = $skip + $size;
+        $data['end'] = $data['end'] > $data['total_product'] ? $data['total_product'] : $data['end'];
+        $data['page'] = $page;
+        $data['prev_page'] = $page <= 1 ? 1 : $page -1;
+        $data['next_page'] = ($page * $size) > $data['total_product'] ? $page : $page+1;
+        $data['search'] = $search;
+        
+        $data['category'] = Category::instance()->get();
         if ($id != null)
             $data['edit'] = $this->product->where('id', '=', $id)->first();
     	return view('admin.product.list', $data);

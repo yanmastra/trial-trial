@@ -97,10 +97,21 @@
                 <div class="col-sm-12">
                     <div class="card card-default">
                         <div class="card-header">
-                            <h4 id="card-title">Data Product</h4>
+                            <div class="row"><div class="col-lg-6">
+                                <h4 id="card-title">Data Product</h4>
+                            </div><div class="col-lg-6">
+                                <form action="" method="GET">
+                                <div class="input-group">
+                                    <input type="text" name="search" value="{{ $search }}" class="form-control" />
+                                    <div class="input-group-append">
+                                        <button class="btn btn-primary" type="submit">SEARCH</button>
+                                    </div>
+                                </div>
+                                </form>
+                            </div></div>
                         </div>
                         <div class="card-body" style="overflow: auto;">
-                            <table class="table table-striped table-bordered" id="table_product" >
+                            <table class="table table-striped table-bordered" >
                                 <thead>
                                 <th style="width: 20px">No</th>
                                 <th style="width: 140px">Code</th>
@@ -139,6 +150,24 @@
                                 @endforeach
                                 </tbody>
                             </table>
+                        </div>
+                        
+                        <div class="card-footer"> 
+                            <div class="row"><div class="col-lg-2">
+                            <span>Showing {{ $start }} to {{ $end }} of {{ $total_product }} Products </span>
+                            </div><div class="col-lg-10">
+                                <div class="input-group">
+                                    <a href="{{ url('product?search='.$search.'&page='.$prev_page) }}" class="input-group-prepend">
+                                        <button type="button" class="btn btn-info" style="width: 140px"> Previous </button>
+                                    </a>
+                                    <div class="input-group-append">
+                                        <span class="form-control" style="width: 100px; text-align: center;"> {{ $page }} </span>
+                                    </div>
+                                    <a href="{{ url('product?search='.$search.'&page='.$next_page) }}" class="input-group-append">
+                                            <button type="button" class="btn btn-info" style="width: 140px"> Next </button>
+                                    </a>
+                                </div>
+                            </div></div>
                         </div>
                     </div>
                 </div>

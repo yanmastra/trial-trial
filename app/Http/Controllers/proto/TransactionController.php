@@ -47,9 +47,13 @@ class TransactionController extends Controller
         return view('admin.transaction.list', $data);
     }
 
-    function transaction($id = null){
+    function transaction(Request $req, $id = null){
         $this->__construct();
         $company = auth()->user()->company()->first();
+
+        $search = $req->input('search');
+        $data['search'] = $search;
+
         $data['company_name'] = $company->name;
         $tx_pending_query = Transaction::instance()
             ->select(
@@ -62,7 +66,21 @@ class TransactionController extends Controller
         $tx_pending = $tx_pending_query->get();
 
         $data['tx_pending'] = $tx_pending;
-        $data['product'] = $this->product->get();
+
+        if ($search == null || $search == '') {
+            $data['product'] = []; //$this->product->select('id', 'code', 'name', 'price')->get();
+        } else {
+            $data['product'] = $this->product->select('id', 'code', 'name', 'price')
+                ->where('code', 'like', '%'.$search.'%')
+                ->orWhere('name', 'like', '%'.$search.'%')
+                ->orWhereHas('category', function($query) use ($search) {
+                    $query->where('name', 'like', '%'.$search.'%');
+                })->get();
+            
+            // if (count($data['product']) == 0) {
+            //     return redirect('transaction/form/'.$id)->with(['tx_id' => $id]);
+            // }
+        }
         $data['id'] = $id;
 
         if ($id == null)
@@ -75,12 +93,9 @@ class TransactionController extends Controller
                 ->where('transaction_id', '=', $id)
                 ->orderBy('tb_transaction_detail.created_at', 'ASC')
                 ->get();
+            
             $data['tx_head'] = $tx_pending_query->where('tb_transaction.id', '=', $id)->first();
         }
-        // $data['config'] = auth()->user()->config();
-
-       // return $data;
-//        echo json_encode($data);
         return view('admin.transaction.form', $data);
     }
 
