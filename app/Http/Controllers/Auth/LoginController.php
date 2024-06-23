@@ -12,7 +12,7 @@ class LoginController extends Controller{
 
     protected $redirectTo = "/dashboard";
 
-    public function __construct(){
+    public function init(){
         $this->middleware('guest')->except('logout');
         Session::flush();
     }

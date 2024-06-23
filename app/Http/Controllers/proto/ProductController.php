@@ -17,7 +17,7 @@ class ProductController extends Controller
 
     private $product;
     private $category;
-    public function __construct(){
+    public function init(){
     	$this->product = Product::instance();
     	$this->category = Category::instance();
     }
@@ -53,7 +53,7 @@ class ProductController extends Controller
     }
 
     function index(Request $req, $id = null){
-        $this->__construct();
+        $this->init();
 
         $page = $req->input('page'); 
         $size = $req->input('size');
@@ -103,7 +103,7 @@ class ProductController extends Controller
     }
 
     function stock($id = null){
-        $this->__construct();
+        $this->init();
         if ($id == null) return redirect('product');
         $data['product'] = $this->product->where('id', '=', $id)->first();
         $data['id'] = $id;
@@ -111,7 +111,7 @@ class ProductController extends Controller
     }
 
     function check_stock($id){
-        $this->__construct();
+        $this->init();
         if ($id == null) return redirect('product');
         $data['product'] = $this->product->where('id', '=', $id)->first();
         $data['id'] = $id;
@@ -120,7 +120,7 @@ class ProductController extends Controller
     }
 
     function up_stock(Request $req, $id = null){
-        $this->__construct();
+        $this->init();
         if ($id == null) return redirect('product');
         $p = $this->product->where('id', '=', $id)->first();
         $res = DB::table('tb_stock')->insert([
@@ -140,7 +140,7 @@ class ProductController extends Controller
 
 
     function save_diff(Request $request, $id){
-        $this->__construct();
+        $this->init();
         $log_id = Str::uuid()->toString();
         $p = $this->product->where('id', '=', $id)->first();
 

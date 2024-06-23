@@ -21,15 +21,17 @@ class TransactionController extends Controller
     private $product;
     private $temp_tx;
 
-    function __construct() {
-        $this->tx = Transaction::instance();
+    function __construct() {}
+
+    function init() {
+        $this->tx = Transaction::instance(auth()->user());
         $this->detail_tx = TransactionDetail::instance();
         $this->product = Product::instance();
     }
 
     function index(Request $req, $id = null){
-        $this->__construct();
-
+        $this->init();
+        
         $start_date = $req->start_date; 
         $end_date = $req->end_date;
         if ($start_date == null || $end_date == null){
@@ -48,21 +50,22 @@ class TransactionController extends Controller
     }
 
     function transaction(Request $req, $id = null){
-        $this->__construct();
+        $this->init();
         $company = auth()->user()->company()->first();
 
         $search = $req->input('_search');
         $data['search'] = $search;
 
         $data['company_name'] = $company->name;
-        $tx_pending_query = Transaction::instance()
+        $tx_pending_query = Transaction::instance($req->user())
             ->select(
                 DB::raw("(SELECT tb_invoice.nomor FROM tb_invoice WHERE tb_invoice.id = tb_transaction.invoice_id LIMIT 1) AS 'nomor'"),
                 'tb_transaction.*',
                 DB::raw("( SELECT SUM((price * qty) - ((price * qty) * discount_pct /100)) AS total FROM tb_transaction_detail WHERE transaction_id = tb_transaction.id ) AS subtotal")
             )
             ->groupBy('tb_transaction.id')
-            ->where('status', '=', '0');
+            ->where('status', '=', '0')
+            ->where('close_cash_id', '=', null);
         $tx_pending = $tx_pending_query->get();
 
         $data['tx_pending'] = $tx_pending;
@@ -123,7 +126,7 @@ class TransactionController extends Controller
 
     function payment(Request $req, $id = null){
         if ($id == null) return redirect(route('trx.form'));
-        $this->__construct();
+        $this->init();
         $payment = [
             'id' => Str::uuid()->toString(),
             'invoice_id' => $id,
@@ -164,7 +167,7 @@ class TransactionController extends Controller
     }
 
     function plus(string $tx_id, string $tx_detail_id){
-        $this->__construct();
+        $this->init();
         $query = $this->detail_tx->where('transaction_id', '=', $tx_id)
             ->where('id', '=', $tx_detail_id);
         $tx_detail = $query->first();
@@ -175,7 +178,7 @@ class TransactionController extends Controller
     }
 
     function minus(string $tx_id, string $tx_detail_id){
-        $this->__construct();
+        $this->init();
         $query = $this->detail_tx->where('transaction_id', '=', $tx_id)
             ->where('id', '=', $tx_detail_id);
         $tx_detail = $query->first();
@@ -188,7 +191,7 @@ class TransactionController extends Controller
     }
 
     function process_close_cash(){
-        $this->__construct();
+        $this->init();
         DB::transaction(function(){
             $close_id = Str::uuid()->toString();
             $company_id = auth()->user()->company_id;
@@ -245,7 +248,7 @@ class TransactionController extends Controller
     }
 
     function detail($id = null){
-        $this->__construct();
+        $this->init();
         if ($id == null) return redirect(route('trx.list'));
         $data['header'] = $this->tx->where('id', '=', $id)->first();
         $data['detail'] = $data['header']->get_details();

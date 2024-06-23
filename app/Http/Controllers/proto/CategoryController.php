@@ -10,7 +10,7 @@ use App\Category;
 class CategoryController extends Controller
 {
     private $category;
-    public function __construct()
+    public function init()
     {
         $this->category = Category::instance();
     }

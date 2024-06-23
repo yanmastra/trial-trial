@@ -32,7 +32,7 @@ class ConfirmPasswordController extends Controller
      *
      * @return void
      */
-    public function __construct()
+    public function init()
     {
         $this->middleware('auth');
     }

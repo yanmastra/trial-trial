@@ -19,9 +19,10 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-
 # Dump of table closed_cash
 # ------------------------------------------------------------
+
+USE db_trial_trial;
 
 DROP TABLE IF EXISTS `closed_cash`;
 

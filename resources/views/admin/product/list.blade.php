@@ -47,8 +47,6 @@
                                             <input type="text" name="code" class="form-control"
                                                    placeholder="Product code ..." value="{{@$edit->code}}"/>
                                         </div>
-                                    </div>
-                                    <div class="col-sm-4">
                                         <div class="form-group">
                                             <label for="category_id">Category</label>
                                             <select class="form-control select2bs4" style="width: 100%;"
@@ -61,18 +59,39 @@
                                                 @endif
                                             </select>
                                         </div>
+                                    </div>
+                                    <div class="col-sm-4">
+
                                         <div class="form-group">
                                             <label for="code">Cost Price</label>
-                                            <input type="number" name="cost_price" class="form-control"
+                                            <input id="cost-price" type="number" name="cost_price" class="form-control"
                                                    placeholder="Cost price ..." value="{{round(@$edit->cost_price, 2)}}"/>
+                                        </div>
+
+
+                                        <div class="form-group">
+                                        <label for="code">Margin</label>
+                                        <div class="input-group">
+                                            @if(isset($edit->id) && $edit->cost_price > 0)
+                                            <input id="input-margin" type="number" name="margin" class="form-control" placeholder="Sell price margin ..." 
+                                                value="{{round((@$edit->price - @$edit->cost_price) / @$edit->cost_price * 100, 2)}}" 
+                                                onchange="onMarginChanged()"/>
+                                            @else
+                                            <input id="input-margin" type="number" name="margin" class="form-control" placeholder="Sell price margin ..." value="2" onchange="onMarginChanged()"/>
+                                            @endif
+                                            <span class="input-group-append"><button disabled class="btn btn-default"> % </button></span>
+                                            <div  class="input-group-append"><button id="apply-margin" class="btn btn-info" type="button" onclick="onApplyMargin()">APPLY MARGIN</button></div>
+                                        </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="code">Sell Price</label>
+                                            <input id="sell-price" type="number" name="sell_price" class="form-control"
+                                                   placeholder="Sell price ..." value="{{round(@$edit->price, 2)}}" />
                                         </div>
                                     </div>
                                     <div class="col-sm-4">
-                                        <div class="form-group">
-                                            <label for="code">Sell Price</label>
-                                            <input type="number" name="sell_price" class="form-control"
-                                                   placeholder="Sell price ..." value="{{round(@$edit->price, 2)}}" />
-                                        </div>
+                                        
                                         @if(!isset($edit->id))
                                         <div class="form-group">
                                             <label for="code">Stock</label>
@@ -120,18 +139,26 @@
                                 <th align="right">Stock</th>
                                 <th align="right">Cost Price</th>
                                 <th align="right">Sell Price</th>
+                                <th align="right">Margin</th>
                                 <td style="width: 300px"></td>
                                 </thead>
                                 <tbody>
                                 @foreach(@$product as $i => $item)
                                     <tr>
                                         <td>{{ ($i+1) }}</td>
-                                        <td>{{ $item->code }}</td>
+                                        <td> <div><strong>{{ $item->code }}</strong> <span class="upc-barcode"> {{ $item->code }} </span></div> </td>
                                         <td>{{ $item->name }}</td>
                                         <td>{{ @$item->category()->first()->name }}</td>
                                         <td>{{ @number_format($item->stock, 0, ',', '.') }}</td>
                                         <td align="right">{{ number_format($item->cost_price, 2, ',', '.') }}</td>
                                         <td align="right">{{ number_format($item->price, 2, ',', '.') }}</td>
+
+                                        @if ($item->cost_price == 0)
+                                            <td align="right">100%</td>
+                                        @else
+                                            <td align="right">{{ number_format(($item->price - $item->cost_price) / $item->cost_price * 100 , 2, ',', '.') }}%</td>
+                                        @endif
+
                                         <td align="right">
                                             <a class="btn btn-outline-success btn-sm" href="{{ url('product/stock/'.$item->id) }}">Input Stock</a>
                                             <a class="btn btn-warning btn-sm" href="{{ url('product/check_stock/'.$item->id) }}">Check Stock</a>
@@ -180,6 +207,23 @@
         </div>
 
         <script type="text/javascript">
+            function onMarginChanged() {
+                var marginInput = $('#input-margin').val();
+                console.log('input margin=' + marginInput);
+                if (marginInput > 0) {
+                    $('#apply-margin').removeClass('disabled');
+                } else {
+                    $('#apply-margin').addClass('disabled');
+                }
+            }
+
+            function onApplyMargin() {
+                var costPrice = $('#cost-price').val();
+                var marginInput = $('#input-margin').val();
+                var sellPrice = costPrice * (1 + (marginInput / 100));
+                $('#sell-price').val(sellPrice);
+            }
+
             $(function () {
                     //Initialize Select2 Elements
                     $('.select2').select2()
@@ -211,6 +255,19 @@
     <link rel="stylesheet" href="{{ url('assets/plugins/select2/css/select2.min.css') }}"/>
     <link rel="stylesheet" href="{{ url('assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ url('assets/plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+EAN13+Text&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+128&display=swap" rel="stylesheet">
+    <style>
+        .upc-barcode,
+        .ean-barcode {
+            font-family: 'Libre Barcode 128', sans-serif;
+            font-size: 42px;
+            transform: scale(.5, 1);
+        }
+    </style>
 @endsection
 @section('header_script')
     <script src="{{ url('assets/plugins/select2/js/select2.full.min.js') }}"></script>

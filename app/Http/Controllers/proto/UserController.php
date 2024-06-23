@@ -13,7 +13,7 @@ class UserController extends Controller
 {
     private $users;
 
-    public function __construct(){
+    public function init(){
         $this->users = auth()->user();
     }
 
