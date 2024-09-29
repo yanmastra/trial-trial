@@ -63,7 +63,7 @@
                                             <tr>
                                                 <td align="center">{{$item->nomor}}</td>
                                                 <td align="left">{{date('d M Y', strtotime($item->tx_date))}}</td>
-                                                <td align="center">{{$item->remark}}</td>
+                                                <td align="center">{{$item->remark}} {{$item->close_cash_id == null ? '' : 'Closed'}}</td>
                                                 <td align="right">{{number_format($item->total, 2, ',', '.')}}</td>
                                                 <td align="right">
                                                     <a class="btn btn-primary btn-sm" href="{{ url('transaction/detail/'.$item->id) }}">Detail</a>

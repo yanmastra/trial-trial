@@ -30,19 +30,19 @@
                                         <td>{{@$product->code}}</td>
                                     </tr>
                                     <tr>
-                                        <td>Code</td>
+                                        <td>Price</td>
                                         <td>:</td>
-                                        <td>{{@$product->code}}</td>
+                                        <td>Rp {{ number_format(@$product->price, 2, ',', '.') }}</td>
                                     </tr>
                                     <tr>
-                                        <td>Code</td>
+                                        <td>Cost Price</td>
                                         <td>:</td>
-                                        <td>{{@$product->code}}</td>
+                                        <td>Rp {{ number_format(@$product->cost_price, 2, ',', '.') }}</td>
                                     </tr>
                                     <tr>
-                                        <td>Code</td>
+                                        <td>Stock</td>
                                         <td>:</td>
-                                        <td>{{@$product->code}}</td>
+                                        <td>{{@$product->stock}}</td>
                                     </tr>
                                 </tbody>
                             </table>

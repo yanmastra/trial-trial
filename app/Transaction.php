@@ -6,42 +6,49 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Transaction extends Model
 {
 
     public $table = "tb_transaction";
-    public $timestamps=true;
-    public $incrementing=false;
-    protected $primaryKey='id';
+    public $timestamps = true;
+    public $incrementing = false;
+    protected $primaryKey = 'id';
     protected $granted = ['updated_at', 'deleted_at'];
-    protected $fillable = ['id', 'tx_date', 'invoice_id', 'company_id', 'remark', 'status', 'created_at', 'created_by'];
+    protected $fillable = ['id', 'tx_date', 'invoice_id', 'company_id', 'close_cash_id', 'remark', 'status', 'created_at', 'created_by'];
 
-    public function details(){
+    public function details(): HasMany
+    {
         return $this->hasMany('App\TransactionDetail', 'transaction_id', 'id');
     }
 
-    public function get_details(){
+    public function get_details()
+    {
         return $this->details()->get();
     }
 
-    public function invoice(){
+    public function invoice()
+    {
         return $this->belongsTo('App\Invoice', 'invoice_id', 'id');
     }
 
-    public function get_invoice(){
+    public function get_invoice()
+    {
         return $this->invoice()->first();
     }
 
-    public static function instance(){
+    public static function instance()
+    {
         $tx = new Transaction();
         $user = auth()->user();
         if ($user['type'] == 'COMPANY') $tx = $tx->where('tb_transaction.company_id', '=', $user->company_id);
         return $tx;
     }
 
-    public static function find_all($start_date = null, $end_date = null, $complete = null){
-        if ($start_date == null || $end_date == null){
+    public static function find_all($start_date = null, $end_date = null, $complete = null)
+    {
+        if ($start_date == null || $end_date == null) {
             $start_date = date('Y-m-d');
             $end_date = date('Y-m-d');
         }
@@ -52,8 +59,8 @@ class Transaction extends Model
             ->whereBetween('tx_date', [$start_date, $end_date]);
 
         // echo $complete;
-        if ($complete == 1 || $complete)
-            $query = $query->where('status', '=', 1);
+        if (!$complete)
+            $query = $query->whereNull('close_cash_id');
 
         $query = $query->orderBy('nomor');
 
@@ -65,7 +72,8 @@ class Transaction extends Model
      * @param array $data [invoice_id, remark]
      * @return mixed|string|null
      */
-    public static function create(array $data = []){
+    public static function create(array $data = [])
+    {
         if ($data == null || count($data) < 0) return null;
         $id = $data['invoice_id'];
         $company_id = auth()->user()->company_id;
@@ -98,7 +106,7 @@ class Transaction extends Model
             }
         }
 
-        if ($result != null){
+        if ($result != null) {
             $already = DB::table('tb_transaction')->where('id', '=', $id)->first();
             $tx_data = [
                 'id' => $tx_id,
@@ -117,7 +125,8 @@ class Transaction extends Model
         return $id;
     }
 
-    public static function create_detail(array $data = null){
+    public static function create_detail(array $data = null)
+    {
         if ($data == null) return null;
 
         $already = DB::table('tb_transaction_detail')
@@ -127,35 +136,37 @@ class Transaction extends Model
             ->where('discount_pct', '=', $data['discount_pct'])
             ->first();
 
-        if ($already != null){
+        if ($already != null) {
             $data['id'] = $already->id;
             $data['qty'] = $data['qty'] + $already->qty;
             $result = TransactionDetail::where('id', '=', $data['id'])->update($data);
-        }else {
+        } else {
             $data['id'] = Str::uuid()->toString();
             $result = TransactionDetail::create($data);
         }
         return $data['id'];
     }
 
-    public static function get_last_closed_cash() {
+    public static function get_last_closed_cash()
+    {
         $company_id = auth()->user()->company_id;
-        $start_date = DB::select("select close_time from closed_cash where company_id='$company_id' order by close_time DESC limit 1");
+        $start_date = DB::select("select start_time from closed_cash where company_id='$company_id' order by close_time DESC limit 1");
         if (count($start_date) > 0) {
-            $start_date = $start_date[0]->close_time;
+            $start_date = $start_date[0]->start_time;
         } else {
             $start_date = date('Y-m-d');
         }
         return $start_date;
     }
 
-    public static function query_tx_summary($start_date = null){
+    public static function query_tx_summary($start_date = null)
+    {
         $company_id = auth()->user()->company_id;
         if ($start_date == null) {
             $start_date = date('Y-m-d');
         }
 
-        $sql = "SELECT 
+        $sql = "SELECT
 TD.product_id as 'id',
 (SELECT P.name FROM tb_product P WHERE P.id = TD.product_id) as 'name',
 SUM(TD.qty) as 'qty',
@@ -164,9 +175,9 @@ IFNULL((SUM(qty) * (SELECT cost_price FROM tb_product P WHERE P.id = TD.product_
 IFNULL(SUM(qty * TD.discount_pct * TD.price / 100), 0) as 'total_discount',
 IFNULL(SUM(qty * TD.price), 0) as 'subtotal'
 
-FROM tb_transaction_detail TD LEFT JOIN tb_transaction T ON TD.transaction_id = T.id 
+FROM tb_transaction_detail TD LEFT JOIN tb_transaction T ON TD.transaction_id = T.id
 WHERE TD.qty > 0 AND (T.close_cash_id IS NUll OR T.close_cash_id = '') AND T.tx_date >= DATE_FORMAT('$start_date', '%Y-%m-%d') AND T.company_id='$company_id'
-GROUP BY TD.product_id 
+GROUP BY TD.product_id
 ORDER BY qty DESC
 ";
 
@@ -176,7 +187,8 @@ ORDER BY qty DESC
         return $query;
     }
 
-    public static function get_total_tx_summary($start_date = null){
+    public static function get_total_tx_summary($start_date = null)
+    {
         $company_id = auth()->user()->company_id;
         if ($start_date == null) {
             $start_date = date('Y-m-d');
@@ -184,7 +196,7 @@ ORDER BY qty DESC
 
         return DB::select("SELECT IFNULL(SUM((D.price * qty) - (discount_pct * D.price / 100 * qty)), 0) AS total
         FROM tb_transaction T LEFT JOIN tb_transaction_detail D ON transaction_id = T.id
-        WHERE (close_cash_id IS NULL OR close_cash_id = '') AND T.company_id = '$company_id' AND status = 1 
+        WHERE (close_cash_id IS NULL OR close_cash_id = '') AND T.company_id = '$company_id' AND status = 1
         AND T.tx_date >= DATE_FORMAT('$start_date', '%Y-%m-%d') AND T.company_id='$company_id'
         ")[0]->total;
     }

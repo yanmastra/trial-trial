@@ -52,6 +52,7 @@ Route::middleware(['auth:web', 'App\Http\Middleware\AdminCompany'])->group(funct
         Route::get('/delete/{id}', 'proto\ProductController@delete');
 		Route::get('/edit/{id}', 'proto\ProductController@index');
         Route::get('/stock/{id}', 'proto\ProductController@stock');
+        Route::get('/print', 'proto\ProductController@print');
         Route::get('/check_stock/{id}', 'proto\ProductController@check_stock');
         Route::get('/{id}', 'proto\ProductController@detail')->name('product.detail');
         Route::post('/up_stock/{id}', 'proto\ProductController@up_stock');

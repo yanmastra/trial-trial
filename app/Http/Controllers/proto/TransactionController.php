@@ -31,14 +31,12 @@ class TransactionController extends Controller
 
     function index(Request $req, $id = null){
         $this->init();
-        
-        $start_date = $req->start_date; 
+
+        $start_date = $req->start_date;
         $end_date = $req->end_date;
         $all = $req->all;
-        if ($all == null || $all == 'off') $all = false;
-        else $all = true;
-
-        $completed = !$all;
+        if ($all == 'on' || $all) $completed = true;
+        else $completed = false;
 
         if ($start_date == null || $end_date == null){
             $start_date = date('Y-m-d');
@@ -65,13 +63,13 @@ class TransactionController extends Controller
         $data['search'] = $search;
 
         $data['company_name'] = $company->name;
-        $tx_pending_query = Transaction::instance($req->user())
+        $tx_pending_query = Transaction::instance()
             ->select(
                 DB::raw("(SELECT tb_invoice.nomor FROM tb_invoice WHERE tb_invoice.id = tb_transaction.invoice_id LIMIT 1) AS 'nomor'"),
                 'tb_transaction.*',
                 DB::raw("( SELECT SUM((price * qty) - ((price * qty) * discount_pct /100)) AS total FROM tb_transaction_detail WHERE transaction_id = tb_transaction.id ) AS subtotal")
             )
-            ->groupBy('tb_transaction.id')
+//            ->groupBy('tb_transaction.id')
             ->where('status', '=', '0')
             ->where('close_cash_id', '=', null);
         $tx_pending = $tx_pending_query->get();
@@ -87,7 +85,7 @@ class TransactionController extends Controller
                 ->orWhereHas('category', function($query) use ($search) {
                     $query->where('name', 'like', '%'.$search.'%');
                 })->get();
-            
+
             // if (count($data['product']) == 0) {
             //     return redirect('transaction/form/'.$id)->with(['tx_id' => $id]);
             // }
@@ -98,13 +96,13 @@ class TransactionController extends Controller
             $data['tx_detail'] = array();
         else {
             $data['tx_detail'] = $this->detail_tx->select(
-                'tb_transaction_detail.*', 
+                'tb_transaction_detail.*',
                 DB::raw("(SELECT name FROM tb_product WHERE tb_transaction_detail.product_id = id LIMIT 1) AS 'name'")
             )
                 ->where('transaction_id', '=', $id)
                 ->orderBy('tb_transaction_detail.created_at', 'ASC')
                 ->get();
-            
+
             $data['tx_head'] = $tx_pending_query->where('tb_transaction.id', '=', $id)->first();
         }
         return view('admin.transaction.form', $data);
@@ -241,7 +239,7 @@ class TransactionController extends Controller
                 'total_paid' => $payment
             ];
     //        return $close;
-            
+
             $result = ClosedCash::create($close);
             if ($result){
                 $this->tx->where('tb_transaction.company_id', '=', $company_id)

@@ -23,6 +23,7 @@ class ProductController extends Controller
     }
 
     function save(Request $req, $id = null){
+        $this->init();
         $product = [
             'id' => ($id == null)?Str::uuid()->toString():$id,
             'code' => ($req->code == '')?(new \DateTime())->getTimestamp():$req->code,
@@ -43,21 +44,49 @@ class ProductController extends Controller
     }
 
     function detail($id){
+        $this->init();
         $product = $this->product->where('id', '=', $id)->first();
         return view('admin.product.detail', ['product' => $product]);
     }
 
     function delete($id){
+        $this->init();
         $this->product->where('id', '=', $id)->delete();
         return redirect(route('product.list'));
+    }
+
+    function print(Request $req)
+    {
+        $printIds = $req->input('print_ids');
+        if ($printIds != null) {
+            $printIds = explode(",", $printIds);
+        } else {
+            $printIds = [];
+        }
+
+        if (count($printIds) > 0) {
+            $data['print_products'] = Product::instance()->whereIn('id', $printIds)->get();
+            $printIds = [];
+            foreach ($data['print_products'] as $i => $p) {
+                $printIds[$i] = $p->id;
+            }
+        }
+        $data['print_ids'] = $printIds;
+        return view('admin.product.print', $data);
     }
 
     function index(Request $req, $id = null){
         $this->init();
 
-        $page = $req->input('page'); 
+        $page = $req->input('page');
         $size = $req->input('size');
         $search = $req->input('_search');
+        $printIds = $req->input('print_ids');
+        if ($printIds != null) {
+            $printIds = explode(",", $printIds);
+        } else {
+            $printIds = [];
+        }
 
         if ($page == null) {
             $page = 1;
@@ -95,7 +124,16 @@ class ProductController extends Controller
         $data['prev_page'] = $page <= 1 ? 1 : $page -1;
         $data['next_page'] = ($page * $size) > $data['total_product'] ? $page : $page+1;
         $data['search'] = $search;
-        
+
+        if (count($printIds) > 0) {
+            $data['print_products'] = Product::instance()->whereIn('id', $printIds)->get();
+            $printIds = [];
+            foreach ($data['print_products'] as $i => $p) {
+                $printIds[$i] = $p->id;
+            }
+        }
+        $data['print_ids'] = $printIds;
+
         $data['category'] = Category::instance()->get();
         if ($id != null)
             $data['edit'] = $this->product->where('id', '=', $id)->first();

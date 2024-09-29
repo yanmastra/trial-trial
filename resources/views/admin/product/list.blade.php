@@ -11,6 +11,42 @@
 </div> -->
     <section class="content">
         <div class="container-fluid">
+            @if (count($print_ids) > 0)
+                <br/>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card card-outline card-default">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <h5>Product to be Printed</h5>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    @foreach($print_products as $i => $item)
+{{--                                        <div class="col-sm-2">--}}
+                                            <div class="print-barcode-product">
+                                                <h3>{{@$item->name}}</h3>
+                                                <span class="upc-barcode-lg"> {{ $item->code }} </span>
+                                                <span class="upc-barcode-lg-code">{{ $item->code }}</span>
+                                            </div>
+{{--                                        </div>--}}
+                                    @endforeach
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-2">
+                                        <a class="btn btn-sm btn-default" target="_blank" href="{{url('product/print?print_ids=')}}{{implode(',', $print_ids)}}"> PRINT </a>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <em>Add more product or click Print to print!</em>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <br>
             <div class="row">
                 <div class="col-sm-12">
@@ -73,8 +109,8 @@
                                         <label for="code">Margin</label>
                                         <div class="input-group">
                                             @if(isset($edit->id) && $edit->cost_price > 0)
-                                            <input id="input-margin" type="number" name="margin" class="form-control" placeholder="Sell price margin ..." 
-                                                value="{{round((@$edit->price - @$edit->cost_price) / @$edit->cost_price * 100, 2)}}" 
+                                            <input id="input-margin" type="number" name="margin" class="form-control" placeholder="Sell price margin ..."
+                                                value="{{round((@$edit->price - @$edit->cost_price) / @$edit->cost_price * 100, 2)}}"
                                                 onchange="onMarginChanged()"/>
                                             @else
                                             <input id="input-margin" type="number" name="margin" class="form-control" placeholder="Sell price margin ..." value="2" onchange="onMarginChanged()"/>
@@ -91,7 +127,7 @@
                                         </div>
                                     </div>
                                     <div class="col-sm-4">
-                                        
+
                                         @if(!isset($edit->id))
                                         <div class="form-group">
                                             <label for="code">Stock</label>
@@ -122,6 +158,7 @@
                                 <form action="" method="GET">
                                 <div class="input-group">
                                     <input id="product_search" type="text" name="_search" value="{{ $search }}" class="form-control" />
+                                    <input type="text" value="{{implode(',', $print_ids)}}" name="print_ids" hidden>
                                     <div class="input-group-append">
                                         <button class="btn btn-primary" type="submit">SEARCH</button>
                                     </div>
@@ -150,8 +187,8 @@
                                         <td>{{ $item->name }}</td>
                                         <td>{{ @$item->category()->first()->name }}</td>
                                         <td>{{ @number_format($item->stock, 0, ',', '.') }}</td>
-                                        <td align="right">{{ number_format($item->cost_price, 2, ',', '.') }}</td>
-                                        <td align="right">{{ number_format($item->price, 2, ',', '.') }}</td>
+                                        <td align="right">Rp {{ number_format($item->cost_price, 2, ',', '.') }}</td>
+                                        <td align="right">Rp {{ number_format($item->price, 2, ',', '.') }}</td>
 
                                         @if ($item->cost_price == 0)
                                             <td align="right">100%</td>
@@ -168,7 +205,11 @@
                                             </button>
                                             <div class="dropdown-menu">
                                                 <a class="dropdown-item"
+                                                   href="{{ url('product/'.$item->id) }}">View</a>
+                                                <a class="dropdown-item"
                                                    href="{{ url('product/edit/'.$item->id) }}">Edit</a>
+                                                <a class="dropdown-item"
+                                                   href="{{url('product?print_ids=')}}{{implode(',', $print_ids)}},{{$item->id}}&_search={{$search}}">Print</a>
                                                 <a  class="dropdown-item"
                                                    href="{{ url('product/delete/'.$item->id) }}">Delete</a>
                                             </div>
@@ -178,16 +219,18 @@
                                 </tbody>
                             </table>
                         </div>
-                        
-                        <div class="card-footer"> 
+
+                        <div class="card-footer">
                             <div class="row"><div class="col-lg-2">
                             <span>Showing {{ $start }} to {{ $end }} of {{ $total_product }} Products </span>
                             </div><div class="col-lg-10">
                                 <div class="input-group">
+                                    @if ($prev_page < $page)
                                     <a href="{{ url('product?search='.$search.'&page='.$prev_page) }}" class="input-group-prepend">
                                         <button type="button" class="btn btn-info" style="width: 140px"> Previous </button>
                                     </a>
-                                    @if ($page > 2) 
+                                    @endif
+                                    @if ($page > 2)
                                         <a href="{{ url('product?search='.$search.'&page=1') }}" class="input-group-prepend">
                                             <button type="button" class="btn btn-default" style="width: 140px"> Back to Page 1 </button>
                                         </a>
@@ -195,9 +238,11 @@
                                     <div class="input-group-append">
                                         <span class="form-control" style="width: 300px; text-align: center;">Page {{ $page }} </span>
                                     </div>
+                                    @if ($next_page > $page)
                                     <a href="{{ url('product?search='.$search.'&page='.$next_page) }}" class="input-group-append">
                                             <button type="button" class="btn btn-info" style="width: 140px"> Next </button>
                                     </a>
+                                    @endif
                                 </div>
                             </div></div>
                         </div>
@@ -266,6 +311,25 @@
             font-family: 'Libre Barcode 128', sans-serif;
             font-size: 42px;
             transform: scale(.5, 1);
+        }
+        .upc-barcode-lg {
+            font-family: 'Libre Barcode 128', sans-serif;
+            font-size: 64px;
+            transform: scale(.5, 1);
+            line-height: 1;
+        }
+        .upc-barcode-lg-code {
+            font-family: 'Libre Barcode EAN13 Text', sans-serif;
+            font-size: 12pt;
+            line-height: 0.5;
+        }
+        .print-barcode-product {
+            display: inline-block;
+            width: 8cm;
+            padding: 16px;
+            border: grey 1px solid;
+            margin-right: 0.5cm;
+            margin-bottom: 0.5cm;
         }
     </style>
 @endsection
