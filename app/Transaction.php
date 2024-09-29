@@ -49,10 +49,15 @@ class Transaction extends Model
             ->select('tb_transaction.*', 'tb_invoice.nomor', DB::raw("
                 (SELECT SUM((price * qty) - ((price * qty) * discount_pct /100)) FROM tb_transaction_detail WHERE transaction_id = tb_transaction.id) AS total
             "))
-            ->whereBetween('tx_date', [$start_date, $end_date])
-            ->orderBy('nomor');
-        if ($complete == 1 || $complete == true)
-            $query->where('status', '=', 1);
+            ->whereBetween('tx_date', [$start_date, $end_date]);
+
+        // echo $complete;
+        if ($complete == 1 || $complete)
+            $query = $query->where('status', '=', 1);
+
+        $query = $query->orderBy('nomor');
+
+        // dd($query);
         return $query->get();
     }
 
@@ -133,10 +138,24 @@ class Transaction extends Model
         return $data['id'];
     }
 
-    public static function query_tx_summary(){
+    public static function get_last_closed_cash() {
         $company_id = auth()->user()->company_id;
-        $query = DB::select(
-            "SELECT 
+        $start_date = DB::select("select close_time from closed_cash where company_id='$company_id' order by close_time DESC limit 1");
+        if (count($start_date) > 0) {
+            $start_date = $start_date[0]->close_time;
+        } else {
+            $start_date = date('Y-m-d');
+        }
+        return $start_date;
+    }
+
+    public static function query_tx_summary($start_date = null){
+        $company_id = auth()->user()->company_id;
+        if ($start_date == null) {
+            $start_date = date('Y-m-d');
+        }
+
+        $sql = "SELECT 
 TD.product_id as 'id',
 (SELECT P.name FROM tb_product P WHERE P.id = TD.product_id) as 'name',
 SUM(TD.qty) as 'qty',
@@ -146,19 +165,27 @@ IFNULL(SUM(qty * TD.discount_pct * TD.price / 100), 0) as 'total_discount',
 IFNULL(SUM(qty * TD.price), 0) as 'subtotal'
 
 FROM tb_transaction_detail TD LEFT JOIN tb_transaction T ON TD.transaction_id = T.id 
-WHERE TD.qty > 0 AND (T.close_cash_id IS NUll OR T.close_cash_id = '')
+WHERE TD.qty > 0 AND (T.close_cash_id IS NUll OR T.close_cash_id = '') AND T.tx_date >= DATE_FORMAT('$start_date', '%Y-%m-%d') AND T.company_id='$company_id'
 GROUP BY TD.product_id 
 ORDER BY qty DESC
-");
+";
+
+// echo $sql;
+
+        $query = DB::select($sql);
         return $query;
     }
 
-    public static function get_total_tx_summary(){
+    public static function get_total_tx_summary($start_date = null){
         $company_id = auth()->user()->company_id;
-        return DB::select("
-        SELECT IFNULL(SUM((D.price * qty) - (discount_pct * D.price / 100 * qty)), 0) AS total
+        if ($start_date == null) {
+            $start_date = date('Y-m-d');
+        }
+
+        return DB::select("SELECT IFNULL(SUM((D.price * qty) - (discount_pct * D.price / 100 * qty)), 0) AS total
         FROM tb_transaction T LEFT JOIN tb_transaction_detail D ON transaction_id = T.id
-        WHERE (close_cash_id IS NULL OR close_cash_id = '') AND T.company_id = '$company_id' AND status = 1
+        WHERE (close_cash_id IS NULL OR close_cash_id = '') AND T.company_id = '$company_id' AND status = 1 
+        AND T.tx_date >= DATE_FORMAT('$start_date', '%Y-%m-%d') AND T.company_id='$company_id'
         ")[0]->total;
     }
 

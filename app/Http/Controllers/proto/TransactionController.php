@@ -34,15 +34,23 @@ class TransactionController extends Controller
         
         $start_date = $req->start_date; 
         $end_date = $req->end_date;
+        $all = $req->all;
+        if ($all == null || $all == 'off') $all = false;
+        else $all = true;
+
+        $completed = !$all;
+
         if ($start_date == null || $end_date == null){
             $start_date = date('Y-m-d');
             $end_date = date('Y-m-d');
         }
 
-        $data['list'] = Transaction::find_all($start_date, $end_date, 1);
+        $data['list'] = Transaction::find_all($start_date, $end_date, $completed);
         $data['start_date'] = $start_date;
         $data['end_date'] = $end_date;
-        $data['summaries'] = Transaction::query_tx_summary();
+
+        $summary_start_date = Transaction::get_last_closed_cash();
+        $data['summaries'] = Transaction::query_tx_summary($summary_start_date);
         $data['total_payment'] = Payment::find_total_payment()->total_payment;
         $count_tx = $this->tx->select(DB::raw("ifnull(count(id), 0) as count"))->where('status', '=', 1)->whereNull('close_cash_id')->orWhere('close_cash_id', '=', "")->get();
         if (count($count_tx) > 0) $data['tx_count'] = $count_tx[0]->count;
@@ -209,8 +217,9 @@ class TransactionController extends Controller
                 $nomor = $nomor->value + 1;
             }
 
-            $data = Transaction::query_tx_summary();
-            $total = Transaction::get_total_tx_summary();
+            $summary_start_date = Transaction::get_last_closed_cash();
+            $data = Transaction::query_tx_summary($summary_start_date);
+            $total = Transaction::get_total_tx_summary($summary_start_date);
             $payment = Payment::find_total_payment()->total_payment;
 
             $first = ($this->tx->whereNull('close_cash_id')->orWHere('close_cash_id', '=', ''))
