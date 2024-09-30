@@ -59,10 +59,6 @@ class TransactionController extends Controller
         $this->init();
         $company = auth()->user()->company()->first();
 
-        $search = $req->input('_search');
-        $data['search'] = $search;
-
-        $data['company_name'] = $company->name;
         $tx_pending_query = Transaction::instance()
             ->select(
                 DB::raw("(SELECT tb_invoice.nomor FROM tb_invoice WHERE tb_invoice.id = tb_transaction.invoice_id LIMIT 1) AS 'nomor'"),
@@ -71,8 +67,18 @@ class TransactionController extends Controller
             )
 //            ->groupBy('tb_transaction.id')
             ->where('status', '=', '0')
-            ->where('close_cash_id', '=', null);
+            ->where('close_cash_id', '=', null)
+            ->limit(1);
         $tx_pending = $tx_pending_query->get();
+
+        if ($id == null && count($tx_pending) > 0) {
+            $id = $tx_pending[0]->id;
+        }
+
+        $search = $req->input('_search');
+        $data['search'] = $search;
+
+        $data['company_name'] = $company->name;
 
         $data['tx_pending'] = $tx_pending;
 
